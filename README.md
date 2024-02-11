@@ -1,0 +1,2 @@
+# DiskUsageCheckTest_InsideDocker-OR-OutsideDocker
+Dockerコンテナ内とDockerコンテナ外でのディスク使用量のチェック
