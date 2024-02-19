@@ -1,0 +1,85 @@
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# ubuntu_base
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+FROM ubuntu:20.04 AS ubuntu_base
+
+### Add user
+ARG GID=1000
+ARG UID=1000
+ARG USERNAME=jabberwock
+ENV HOME /home/$USERNAME
+RUN groupadd -f -g ${GID} ${USERNAME}
+RUN useradd -m $USERNAME -u ${UID} -g ${GID} \
+    && echo "$USERNAME:$USERNAME" | chpasswd \
+    && usermod --shell /bin/bash $USERNAME \
+    && usermod -aG sudo $USERNAME \
+    && mkdir /etc/sudoers.d \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+### install packages
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata \
+    && DEBIAN_FRONTEND=noninteractive add-apt-repository ppa:deadsnakes/ppa \
+    && DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get clean \
+    && DEBIAN_FRONTEND=noninteractive apt-get autoclean -y \
+    && rm -rf /var/lib/apt/lists/*
+ENV TZ Asia/Tokyo
+
+RUN DEBIAN_FRONTEND=noninteractive apt-get update -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    language-pack-ja \
+    vim \
+    git \
+    gcc \
+    g++ \
+    make \
+    wget \
+    openssl \
+    libssl-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    zlib1g-dev \
+    language-pack-ja-base \
+    language-pack-ja \
+    libgl1-mesa-dev \
+    libopencv-dev \
+    tmux \
+    apache2 \
+    lynx \
+    python3-pip \
+    sudo \
+    && update-locale LANG=ja_JP.UTF-8 \
+    && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get clean \
+    && DEBIAN_FRONTEND=noninteractive apt-get autoclean -y \
+    && rm -rf /var/lib/apt/lists/*
+
+### Japanese Environment Configuration
+ENV LANG ja_JP.UTF-8
+ENV LANGUAGE ja_JP:ja
+ENV LC_ALL ja_JP.UTF-8
+
+USER $USERNAME
+WORKDIR /home/$USERNAME/
+SHELL ["/bin/bash", "-c"]
+
+# Set PATH
+ENV PATH $PATH:$HOME/.local/bin
+
+
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+# disk_usage_checker
+# --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+FROM ubuntu_base AS disk_usage_checker
+
+WORKDIR /home/$USERNAME/
+
+### install python packages
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir \
+    psutil

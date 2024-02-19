@@ -1,0 +1,25 @@
+services:
+
+  disk_usage_checker:
+    build:
+      context: .
+      dockerfile: dockerfile
+      target: disk_usage_checker
+      args:
+        - UID=${UID_FOR_DOCKER}
+        - GID=${GID_FOR_DOCKER}
+        - USERNAME=${USERNAME_FOR_DOCKER}
+        
+    image: disk_usage_checker
+
+    container_name: disk_usage_checker
+
+    tty: true
+
+    volumes:
+      - type: bind
+        source: ./workspace_for_docker
+        target: /home/workspace
+
+    command: >
+      /bin/bash -c "while true; do sleep 1; done"
